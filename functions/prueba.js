@@ -421,6 +421,13 @@ function cuentasFalsas() {
   assert.equal(em.emprendimientos.find((x) => x.cedula === '44444444').dinamizadora, null);
   await falla('asignar', { cedulas: ['44444444'], dinamizadora: '22222222' }, tDina, 403);
   await falla('asignar', { cedulas: ['55555555'], dinamizadora: '22222222' }, tSara, 400); // Luz es de Atlántico
+  // Mismo departamento, otro satélite: una dinamizadora de Valledupar acompaña a una emprendedora de Pueblo Bello (Cesar)
+  await db.collection('directorio').doc('77777777').set({ nombre: 'Ceci Cesar', rol: 'dinamizadora', cargo: 'Acompañamiento - Cesar', correo: null, celular: null, departamento: 'Cesar', satelite: 'valledupar' });
+  await db.collection('perfiles').doc('emp-pueblo-bello').set({ cedula: '66666666', nombre: 'Paz Pueblo Bello', rol: 'emprendedora', municipio: 'Pueblo Bello', satelite: 'pueblo-bello' });
+  assert.equal((await ok('asignar', { cedulas: ['66666666'], dinamizadora: '77777777' }, tSara)).asignados, 1);
+  await falla('asignar', { cedulas: ['66666666'], dinamizadora: '22222222' }, tSara, 400); // Magdalena: otro departamento
+  await db.collection('perfiles').doc('emp-pueblo-bello').delete();
+  await db.collection('directorio').doc('77777777').delete();
   const asg = await ok('asignar', { cedulas: ['44444444'], dinamizadora: '22222222' }, tSara);
   assert.equal(asg.asignados, 1);
   em = await ok('emprendimientos', {}, tSara);

@@ -27,6 +27,8 @@ const SATELITES = {
   sucre: { departamento: 'Sucre', municipios: ['Sincelejo', 'Tolú'] },
   cordoba: { departamento: 'Córdoba', municipios: ['Montería', 'Tierralta'] },
 };
+// Una dinamizadora puede acompañar emprendedoras de cualquier satélite de su departamento (en Cesar hay dos)
+const mismoDepartamento = (a, b) => !!(SATELITES[a] && SATELITES[b] && SATELITES[a].departamento === SATELITES[b].departamento);
 const sateliteDe = (municipio) => (Object.entries(SATELITES).find(([, s]) => s.municipios.includes(municipio)) || [null])[0];
 
 // Reglas de los cursos del equipo (documento técnico 6.4 y guiones del curso de Gestión)
@@ -1176,7 +1178,7 @@ function crearLogica({ db, cuentas, ahora = () => new Date(), catalogo = { archi
     for (const c of cedulas) {
       const e = await perfilPorCedula(c);
       if (!e || e.rol !== 'emprendedora') throw new Falla(404, 'no_existe', `No encontramos el emprendimiento con cédula ${c}.`);
-      if (din && e.satelite !== din.satelite) throw new Falla(400, 'satelite', `${e.nombre} es de otro satélite: solo se puede asignar a una dinamizadora de su mismo satélite.`);
+      if (din && !mismoDepartamento(e.satelite, din.satelite)) throw new Falla(400, 'satelite', `${e.nombre} es de otro departamento: solo se puede asignar a una dinamizadora de su mismo departamento.`);
       perfiles.push(e);
     }
     const nuevas = perfiles.filter((e) => din && e.dinamizadora_cedula !== din.cedula);

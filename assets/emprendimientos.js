@@ -70,9 +70,12 @@
             default: return true;
         }
     }
-    const dinDe = (sat) => (H.datos.dinamizadoras || []).filter((d) => d.satelite === sat);
+    // Una emprendedora puede tener una dinamizadora de cualquier satélite de su departamento (en Cesar hay dos)
+    const deptoDe = (sat) => { const s = C.satelite(sat); return s ? s.departamento : null; };
+    const dinDe = (sat) => (H.datos.dinamizadoras || []).filter((d) => deptoDe(sat) && deptoDe(d.satelite) === deptoDe(sat));
     function opcionesDin(sat, actual, vacio = 'Elige la dinamizadora…') {
-        return `<option value="">${esc(vacio)}</option>${dinDe(sat).map((d) => `<option value="${esc(d.cedula)}" ${d.cedula === actual ? 'selected' : ''}>${esc(d.nombre)} · CC ${esc(d.cedula)}</option>`).join('')}`;
+        const varios = new Set(dinDe(sat).map((d) => d.satelite)).size > 1;
+        return `<option value="">${esc(vacio)}</option>${dinDe(sat).map((d) => `<option value="${esc(d.cedula)}" ${d.cedula === actual ? 'selected' : ''}>${esc(d.nombre)}${varios ? ` · Satélite ${esc(nombreSat(d.satelite))}` : ''} · CC ${esc(d.cedula)}</option>`).join('')}`;
     }
     // El número de pendientes de cada parte se muestra en el submenú y en los botones de inicio
     const cuentaSeccion = (cont, n) => { const s = cont.closest('[data-seccion]'); if (s) s.dataset.seccionCuenta = n; };
@@ -139,7 +142,7 @@
         const grupos = C.SATELITES.map((s) => [s.id, lista.filter((x) => x.satelite === s.id)]).filter(([, xs]) => xs.length);
         cont.innerHTML = `
             <h2>Asignar emprendedoras a dinamizadoras</h2>
-            <p class="vista-intro">Cada emprendedora necesita una dinamizadora de su mismo satélite. Elige el nombre en la lista: <b>se guarda solo</b>.</p>
+            <p class="vista-intro">Cada emprendedora necesita una dinamizadora de su mismo departamento. Elige el nombre en la lista: <b>se guarda solo</b>.</p>
             <div class="asignar-controles">
                 <p class="asignar-resumen"><b>${sin.length}</b> ${sin.length === 1 ? 'emprendedora sin dinamizadora' : 'emprendedoras sin dinamizadora'}</p>
                 <label class="casilla"><input type="checkbox" data-ver-asignadas ${H.verAsignadas ? 'checked' : ''}><span>Mostrar también las que ya tienen dinamizadora (para cambiarla)</span></label>
@@ -149,7 +152,7 @@
                 const pendientes = xs.filter((x) => !x.dinamizadora);
                 return `<section class="tarjeta asignar-grupo">
                 <h3>Satélite ${esc(nombreSat(sat))} <small>${xs.length} ${xs.length === 1 ? 'emprendedora' : 'emprendedoras'}</small></h3>
-                ${!dinDe(sat).length ? '<p class="emp-alerta">Este satélite todavía no tiene dinamizadoras registradas. Pídele a la administración que las registre.</p>'
+                ${!dinDe(sat).length ? '<p class="emp-alerta">Este departamento todavía no tiene dinamizadoras registradas. Pídele a la administración que las registre.</p>'
                     : pendientes.length > 1 ? `<div class="asignar-todas"><label for="lote-${esc(sat)}">Asignar las ${pendientes.length} sin dinamizadora a:</label>
                         <select id="lote-${esc(sat)}" class="campo" data-lote-sat="${esc(sat)}">${opcionesDin(sat, null)}</select>
                         <button type="button" class="btn btn-borde" data-lote-btn="${esc(sat)}">Asignar a todas</button></div>` : ''}
