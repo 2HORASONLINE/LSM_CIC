@@ -49,6 +49,12 @@ echo "3/4 · Instalando dependencias…"
 
 echo "4/4 · Publicando la función…"
 if command -v firebase >/dev/null 2>&1; then FB=firebase; else FB="npx -y firebase-tools@latest"; fi
+# Firebase usa las «credenciales predeterminadas de la aplicación». Si Cloud Shell no las tiene (pasa cuando no salió
+# el aviso «Autorizar Cloud Shell»), se piden aquí: abre el enlace, elige la cuenta, copia el código y pégalo.
+if ! gcloud auth application-default print-access-token >/dev/null 2>&1; then
+  echo "    Falta autorizar las credenciales de Firebase. Abre el enlace, autoriza y pega el código:"
+  gcloud auth application-default login --no-launch-browser
+fi
 # Si la compilación falla, se muestran las últimas líneas de su registro para saber por qué
 if ! $FB deploy --only functions --project "$PROYECTO" --non-interactive; then
   echo "La publicación falló. Últimas líneas de la compilación en Google Cloud:"
