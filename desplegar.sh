@@ -16,6 +16,13 @@ TMP=$(mktemp -d)
 umask 077
 trap 'rm -f functions/.env; rm -rf "$TMP"' EXIT
 
+# Firebase usa las «credenciales predeterminadas de la aplicación». Se revisan al inicio, antes de la descarga lenta.
+# Si Cloud Shell no las tiene (pasa cuando no salió el aviso «Autorizar Cloud Shell»), se piden aquí.
+if ! gcloud auth application-default print-access-token >/dev/null 2>&1; then
+  echo "0/4 · Falta autorizar las credenciales de Firebase. Abre el enlace, autoriza y pega el código NUEVO que muestra Google:"
+  gcloud auth application-default login --no-launch-browser
+fi
+
 echo "1/4 · Copiando la configuración de la función publicada…"
 gcloud run services describe cicacceso --region "$REGION" --project "$PROYECTO" --format=json > "$TMP/servicio.json"
 python3 - "$TMP/servicio.json" > functions/.env <<'PY'
@@ -29,7 +36,7 @@ grep -q '^CIC_API_KEY=.\+' functions/.env || { echo "Falta CIC_API_KEY en la fun
 echo "2/4 · Recuperando los archivos privados de la versión publicada…"
 read -r BUCKET OBJETO < <(gcloud functions describe cicAcceso --gen2 --region "$REGION" --project "$PROYECTO" \
   --format='value(buildConfig.source.storageSource.bucket,buildConfig.source.storageSource.object)')
-gsutil -q cp "gs://$BUCKET/$OBJETO" "$TMP/fuente.zip" || gcloud storage cp "gs://$BUCKET/$OBJETO" "$TMP/fuente.zip" --quiet
+timeout 120 gsutil -q cp "gs://$BUCKET/$OBJETO" "$TMP/fuente.zip" || gcloud storage cp "gs://$BUCKET/$OBJETO" "$TMP/fuente.zip" --quiet
 mkdir -p "$TMP/fuente" && unzip -q "$TMP/fuente.zip" -d "$TMP/fuente"
 if [ -d "$TMP/fuente/archivos" ]; then rm -rf functions/archivos && cp -r "$TMP/fuente/archivos" functions/archivos; fi
 python3 - <<'PY'
@@ -49,12 +56,6 @@ echo "3/4 · Instalando dependencias…"
 
 echo "4/4 · Publicando la función…"
 if command -v firebase >/dev/null 2>&1; then FB=firebase; else FB="npx -y firebase-tools@latest"; fi
-# Firebase usa las «credenciales predeterminadas de la aplicación». Si Cloud Shell no las tiene (pasa cuando no salió
-# el aviso «Autorizar Cloud Shell»), se piden aquí: abre el enlace, elige la cuenta, copia el código y pégalo.
-if ! gcloud auth application-default print-access-token >/dev/null 2>&1; then
-  echo "    Falta autorizar las credenciales de Firebase. Abre el enlace, autoriza y pega el código:"
-  gcloud auth application-default login --no-launch-browser
-fi
 # Si la compilación falla, se muestran las últimas líneas de su registro para saber por qué
 if ! $FB deploy --only functions --project "$PROYECTO" --non-interactive; then
   echo "La publicación falló. Últimas líneas de la compilación en Google Cloud:"
