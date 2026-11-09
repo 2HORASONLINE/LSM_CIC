@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="38 145 108 84" width="448" height="344" role="img" aria-label="Aprodefa">
+  <!-- Logo de APRODEFA redibujado en vector a partir de la versión completa: arcos azul y naranja con tres nodos -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M89 152 A44 35 0 0 0 89 222" stroke="#1E88C8" stroke-width="5.2"/>
+    <path d="M92 162 A34 25 0 0 0 92 212" stroke="#1E88C8" stroke-width="2.2"/>
+    <path d="M95 158 A46 27.5 0 0 1 95 213" stroke="#E8964A" stroke-width="2.6"/>
+  </g>
+  <g fill="#fff" stroke="#1a1a1a" stroke-width="1.3">
+    <circle cx="95" cy="158" r="2.7"/>
+    <circle cx="95" cy="213" r="2.7"/>
+    <circle cx="43.5" cy="187" r="2.7"/>
+  </g>
+  <text x="96" y="191.5" text-anchor="middle" font-family="Arial, Helvetica, 'Liberation Sans', Roboto, sans-serif" font-size="13.6" font-weight="700" font-style="italic" fill="#1a1a1a" textLength="64" lengthAdjust="spacingAndGlyphs">Aprodefa</text>
+</svg>
